@@ -7,6 +7,7 @@ package pods.factories
 import io.airbyte.commons.storage.STORAGE_CLAIM_NAME
 import io.airbyte.commons.storage.STORAGE_MOUNT
 import io.airbyte.commons.storage.STORAGE_VOLUME_NAME
+import io.airbyte.featureflag.JobServiceAccountOverride
 import io.airbyte.featureflag.TestClient
 import io.airbyte.micronaut.runtime.AirbyteConnectorConfig
 import io.airbyte.micronaut.runtime.AirbyteContainerConfig
@@ -51,6 +52,32 @@ class ReplicationPodFactoryTest {
     assertEquals("test-orch-image", orchSpec.image)
     assertEquals("test-source-image", sourceSpec.image)
     assertEquals("test-dest-image", destSpec.image)
+  }
+
+  @Test
+  fun `create pod uses the configured service account when the override flag is empty`() {
+    val pod = Fixtures.createPodWithDefaults(Fixtures.defaultReplicationPodFactory)
+    assertEquals("test-sa", pod.spec.serviceAccount)
+  }
+
+  @Test
+  fun `create pod uses the service account from the override flag`() {
+    val factory =
+      Fixtures.defaultReplicationPodFactory.copy(
+        featureFlagClient = TestClient(mapOf(JobServiceAccountOverride.key to "workspace-sa")),
+      )
+    val pod = Fixtures.createPodWithDefaults(factory)
+    assertEquals("workspace-sa", pod.spec.serviceAccount)
+  }
+
+  @Test
+  fun `create reset pod uses the service account from the override flag`() {
+    val factory =
+      Fixtures.defaultReplicationPodFactory.copy(
+        featureFlagClient = TestClient(mapOf(JobServiceAccountOverride.key to "workspace-sa")),
+      )
+    val pod = Fixtures.createResetWithDefaults(factory)
+    assertEquals("workspace-sa", pod.spec.serviceAccount)
   }
 
   @Test

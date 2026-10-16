@@ -8,6 +8,7 @@ import io.airbyte.commons.storage.STORAGE_CLAIM_NAME
 import io.airbyte.commons.storage.STORAGE_MOUNT
 import io.airbyte.commons.storage.STORAGE_VOLUME_NAME
 import io.airbyte.config.ResourceRequirements
+import io.airbyte.featureflag.JobServiceAccountOverride
 import io.airbyte.featureflag.TestClient
 import io.airbyte.micronaut.runtime.AirbyteConnectorConfig
 import io.airbyte.micronaut.runtime.AirbyteContainerConfig
@@ -65,6 +66,22 @@ class ConnectorPodFactoryTest {
     assertEquals("test-label-val-1", pod.metadata.labels["test-label-1"])
     assertEquals("test-anno-val-1", pod.metadata.annotations["test-anno-1"])
     assertEquals("node-sel-val-1", pod.spec.nodeSelector["node-sel-1"])
+  }
+
+  @Test
+  fun `create pod uses the configured service account when the override flag is empty`() {
+    val pod = Fixtures.createPodWithDefaults(Fixtures.defaultConnectorPodFactory)
+    assertEquals("test-sa", pod.spec.serviceAccount)
+  }
+
+  @Test
+  fun `create pod uses the service account from the override flag`() {
+    val factory =
+      Fixtures.defaultConnectorPodFactory.copy(
+        featureFlagClient = TestClient(mapOf(JobServiceAccountOverride.key to "workspace-sa")),
+      )
+    val pod = Fixtures.createPodWithDefaults(factory)
+    assertEquals("workspace-sa", pod.spec.serviceAccount)
   }
 
   @Test

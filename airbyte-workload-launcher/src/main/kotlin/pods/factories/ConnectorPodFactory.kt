@@ -76,6 +76,8 @@ data class ConnectorPodFactory(
 
     val nodeSelection = nodeSelectionFactory.createNodeSelection(nodeSelectors, allLabels)
 
+    val resolvedServiceAccount = featureFlagClient.resolveJobServiceAccount(serviceAccount, workspaceId)
+
     return PodBuilder()
       .withApiVersion("v1")
       .withNewMetadata()
@@ -85,7 +87,7 @@ data class ConnectorPodFactory(
       .endMetadata()
       .withNewSpec()
       .withSchedulerName(schedulerName)
-      .withServiceAccount(serviceAccount)
+      .withServiceAccount(resolvedServiceAccount)
       .withAutomountServiceAccountToken(false)
       .withRestartPolicy("Never")
       .withContainers(sidecar, main)

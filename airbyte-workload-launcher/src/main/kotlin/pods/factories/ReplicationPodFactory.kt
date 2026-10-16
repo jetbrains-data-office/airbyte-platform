@@ -109,6 +109,8 @@ data class ReplicationPodFactory(
       containers.add(profilerContainerFactory.create(orchRuntimeEnvVars, replicationVolumes.profilerVolumeMounts, profilingMode))
     }
 
+    val serviceAccount = featureFlagClient.resolveJobServiceAccount(airbyteWorkerConfig.job.kubernetes.serviceAccount, workspaceId)
+
     return PodBuilder()
       .withApiVersion("v1")
       .withNewMetadata()
@@ -118,7 +120,7 @@ data class ReplicationPodFactory(
       .endMetadata()
       .withNewSpec()
       .withSchedulerName(schedulerName)
-      .withServiceAccount(airbyteWorkerConfig.job.kubernetes.serviceAccount)
+      .withServiceAccount(serviceAccount)
       .withRestartPolicy("Never")
       .withInitContainers(initContainer)
       .withShareProcessNamespace(enableAsyncProfiler)
@@ -192,6 +194,8 @@ data class ReplicationPodFactory(
 
     val nodeSelection = nodeSelectionFactory.createResetNodeSelection(nodeSelectors)
 
+    val serviceAccount = featureFlagClient.resolveJobServiceAccount(airbyteWorkerConfig.job.kubernetes.serviceAccount, workspaceId)
+
     return PodBuilder()
       .withApiVersion("v1")
       .withNewMetadata()
@@ -201,7 +205,7 @@ data class ReplicationPodFactory(
       .endMetadata()
       .withNewSpec()
       .withSchedulerName(schedulerName)
-      .withServiceAccount(airbyteWorkerConfig.job.kubernetes.serviceAccount)
+      .withServiceAccount(serviceAccount)
       .withRestartPolicy("Never")
       .withInitContainers(initContainer)
       .withContainers(orchContainer, destContainer)
